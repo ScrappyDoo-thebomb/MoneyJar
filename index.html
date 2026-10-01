@@ -1,0 +1,558 @@
+<title>The $15K Money Jar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: jar on a shelf (left) beside a ledger of controls (right); stacks on phones. */
+:root {
+  --bg: #e6ece8;          /* pantry wall, sage-grey */
+  --panel: #f4f7f5;
+  --fg: #13201a;
+  --muted: #5a6b62;
+  --line: #c9d4ce;
+  --money: #3d7a4e;       /* bill green */
+  --money-dark: #2a5a38;
+  --money-light: #8fbf98;
+  --brass: #a87a26;       /* lid + goal line */
+  --brass-light: #d6ad5c;
+  --glass: rgba(255,255,255,.38);
+  --glass-edge: #6f8a7c;
+  --etch: rgba(255,255,255,.92);
+  --etch-shadow: rgba(10,30,20,.55);
+  --shelf: #b9a588;
+  --danger: #a33a2c;
+  --font-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1613; --panel: #16201b; --fg: #e3ece6; --muted: #93a69b; --line: #2a3a32;
+    --money: #4e9462; --money-dark: #2f6440; --money-light: #9fd2a9;
+    --brass: #d0a24a; --brass-light: #ebc778;
+    --glass: rgba(200,230,215,.08); --glass-edge: #6d8c7c;
+    --etch: rgba(235,248,240,.9); --etch-shadow: rgba(0,0,0,.7);
+    --shelf: #4a3f31; --danger: #e0715f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1613; --panel: #16201b; --fg: #e3ece6; --muted: #93a69b; --line: #2a3a32;
+  --money: #4e9462; --money-dark: #2f6440; --money-light: #9fd2a9;
+  --brass: #d0a24a; --brass-light: #ebc778;
+  --glass: rgba(200,230,215,.08); --glass-edge: #6d8c7c;
+  --etch: rgba(235,248,240,.9); --etch-shadow: rgba(0,0,0,.7);
+  --shelf: #4a3f31; --danger: #e0715f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding: 28px 16px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
+header h1 {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.1; margin: 0; text-wrap: balance;
+}
+header p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass); font-weight: 600; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; align-items: start; }
+@media (max-width: 820px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.stage { display: grid; justify-items: center; gap: 0; }
+.stage svg { width: 100%; max-width: 380px; height: auto; display: block; overflow: visible; }
+.shelf { width: 100%; max-width: 440px; height: 14px; background: var(--shelf); border-radius: 3px; box-shadow: 0 8px 18px -10px rgba(0,0,0,.5); }
+.month-note { margin-top: 14px; font-size: 13px; color: var(--muted); text-align: center; max-width: 40ch; }
+
+.ledger { display: grid; gap: 22px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stat { display: grid; gap: 2px; }
+.stat .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.stat .v { font-family: var(--font-mono); font-size: clamp(18px, 3vw, 24px); font-variant-numeric: tabular-nums; }
+.stat.big .v { color: var(--money); }
+.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--money-dark), var(--money)); width: 0; transition: width .6s ease; }
+.bar-row { display: grid; gap: 6px; }
+.bar-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-weight: 400; font-size: 19px; margin: 0; }
+.card .hint { font-size: 13px; color: var(--muted); margin: -8px 0 0; }
+
+.bills { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 420px) { .bills { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bill {
+  position: relative; font: inherit; cursor: pointer; border: 0; border-radius: 4px;
+  aspect-ratio: 2.2 / 1; max-width: 100%;
+  background: var(--money); color: #f2f8f3;
+  box-shadow: inset 0 0 0 3px var(--money-dark), inset 0 0 0 4px var(--money-light), 0 2px 0 var(--money-dark);
+  font-family: var(--font-display); font-size: clamp(15px, 2.4vw, 19px);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.bill:hover { transform: translateY(-2px) rotate(-1.5deg); }
+.bill:active { transform: translateY(1px); }
+.bill:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+input[type="number"], input[type="date"], textarea {
+  font: inherit; font-family: var(--font-mono); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0;
+}
+input[type="number"] { width: 120px; }
+textarea { width: 100%; min-height: 80px; font-size: 12px; resize: vertical; }
+.btn {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px; padding: 8px 14px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+}
+.btn.primary { background: var(--money); border-color: var(--money-dark); color: #f2f8f3; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: currentColor; background: transparent; }
+.btn:disabled { opacity: .45; cursor: default; }
+.err { color: var(--danger); font-size: 13px; min-height: 1.2em; margin: 0; }
+
+.months { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.months li { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.months li:last-child { border-bottom: 0; }
+.months .m { font-family: var(--font-display); }
+.months .d { font-family: var(--font-mono); color: var(--muted); font-size: 13px; }
+.months .t { font-family: var(--font-mono); }
+.months li.live .m::after { content: " \00b7 in progress"; font-family: var(--font-body); font-size: 12px; color: var(--brass); }
+
+.log { list-style: none; margin: 0; padding: 0; display: grid; max-height: 260px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.log li:last-child { border-bottom: 0; }
+.log .amt { font-family: var(--font-mono); color: var(--money); font-weight: 500; }
+.log .when { color: var(--muted); font-size: 13px; }
+.log .x { font: inherit; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.log .x:hover { color: var(--danger); }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+
+details summary { cursor: pointer; font-weight: 600; }
+details[open] summary { margin-bottom: 10px; }
+details .stack { display: grid; gap: 10px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px);
+  background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; max-width: calc(100% - 32px); text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* SVG jar */
+.jar-glass { fill: var(--glass); stroke: var(--glass-edge); stroke-width: 2.5; }
+.jar-shine { fill: #fff; opacity: .28; }
+.lid { fill: var(--brass); }
+.lid-ridge { stroke: var(--brass-light); stroke-width: 1.5; opacity: .7; }
+.money-fill { transition: y .7s cubic-bezier(.2,.8,.2,1), height .7s cubic-bezier(.2,.8,.2,1); }
+.goal-line { stroke: var(--brass); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+.goal-text { fill: var(--brass); font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; }
+.etch-shadow { stroke: var(--etch-shadow); stroke-width: 2.2; fill: none; }
+.etch-line { stroke: var(--etch); stroke-width: 1.2; fill: none; }
+.etch-text { fill: var(--etch); font-family: var(--font-display); font-size: 10.5px; letter-spacing: .06em; paint-order: stroke; stroke: var(--etch-shadow); stroke-width: 2.2px; }
+.etch-new { animation: etchIn 1.4s ease-out both; }
+@keyframes etchIn { from { stroke-dashoffset: 260; opacity: .2; } to { stroke-dashoffset: 0; opacity: 1; } }
+.bill-shape rect.b { stroke: var(--money-dark); stroke-width: 1; }
+.bill-shape rect.i { fill: none; stroke: var(--money-light); stroke-width: .6; }
+.bill-shape text { fill: #eef6ef; font-family: var(--font-display); font-size: 8px; }
+.pct-text { font-family: var(--font-display); font-size: 22px; fill: var(--fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Savings game &middot; $5 bills and up</div>
+    <h1>The $15,000 Money Jar</h1>
+    <p>Drop bills into the jar as you save. When a month ends, a line is engraved on the glass at the level you reached, so you can see every month stacked up on the way to the goal.</p>
+  </header>
+
+  <div class="main">
+    <section class="stage" aria-label="Money jar">
+      <svg id="jar" viewBox="0 0 320 470" role="img" aria-labelledby="jarTitle">
+        <title id="jarTitle">Money jar</title>
+        <defs>
+          <clipPath id="inside">
+            <path d="M86,70 L86,92 C86,104 36,110 36,134 L36,408 Q36,439 66,439 L254,439 Q284,439 284,408 L284,134 C284,110 234,104 234,92 L234,70 Z"/>
+          </clipPath>
+          <pattern id="stack" width="40" height="14" patternUnits="userSpaceOnUse">
+            <rect width="40" height="14" fill="var(--money-dark)"/>
+            <rect x="1" y="1" width="38" height="5" rx="1" fill="var(--money)"/>
+            <rect x="-19" y="8" width="38" height="5" rx="1" fill="var(--money)"/>
+            <rect x="21" y="8" width="38" height="5" rx="1" fill="var(--money)"/>
+          </pattern>
+        </defs>
+
+        <!-- contents, clipped to the glass -->
+        <g clip-path="url(#inside)">
+          <rect id="fill" class="money-fill" x="30" y="439" width="260" height="0" fill="url(#stack)"/>
+          <g id="pile"></g>
+          <g id="drops"></g>
+        </g>
+
+        <!-- glass -->
+        <path class="jar-glass" d="M80,62 L80,88 C80,100 30,104 30,130 L30,410 Q30,445 65,445 L255,445 Q290,445 290,410 L290,130 C290,104 240,100 240,88 L240,62 Z"/>
+        <path class="jar-shine" d="M44,150 Q42,140 50,134 L54,134 Q48,142 49,152 L49,392 Q49,404 54,410 L48,410 Q44,404 44,392 Z"/>
+        <path class="jar-shine" d="M262,150 L266,150 L266,250 L262,250 Z" opacity=".5"/>
+
+        <!-- goal + engravings (etched into the glass, drawn on top) -->
+        <g id="goal">
+          <path class="goal-line" d="M36,140 Q160,148 284,140"/>
+          <text class="goal-text" x="160" y="132" text-anchor="middle">GOAL &middot; $15,000</text>
+        </g>
+        <g id="etchings"></g>
+
+        <!-- lid -->
+        <rect class="lid" x="70" y="22" width="180" height="42" rx="6"/>
+        <g id="ridges"></g>
+        <rect x="74" y="58" width="172" height="6" rx="2" fill="var(--money-dark)" opacity=".25"/>
+        <rect x="128" y="34" width="64" height="7" rx="3.5" fill="var(--money-dark)" opacity=".55"/>
+
+        <text id="pctLabel" class="pct-text" x="160" y="466" text-anchor="middle"></text>
+      </svg>
+      <div class="shelf"></div>
+      <p class="month-note" id="monthNote"></p>
+    </section>
+
+    <section class="ledger">
+      <div class="stats">
+        <div class="stat big"><span class="k">Saved</span><span class="v" id="sSaved">$0</span></div>
+        <div class="stat"><span class="k">To go</span><span class="v" id="sLeft">$15,000</span></div>
+        <div class="stat"><span class="k">Avg / month</span><span class="v" id="sAvg">&ndash;</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+        <div class="bar-meta"><span id="barPct">0%</span><span id="eta">Add a bill to start your pace</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Drop money in</h2>
+        <p class="hint">Tap a bill to add it. Pick a date first if you are logging a deposit from earlier.</p>
+        <div class="bills" id="bills"></div>
+        <div class="row">
+          <div class="field">
+            <label for="custom">Other amount ($5 min.)</label>
+            <input id="custom" type="number" min="5" step="1" inputmode="numeric" placeholder="e.g. 200">
+          </div>
+          <button class="btn primary" id="addCustom" type="button">Add</button>
+          <div class="field">
+            <label for="date">Deposit date</label>
+            <input id="date" type="date">
+          </div>
+          <button class="btn ghost" id="undo" type="button">Undo last</button>
+        </div>
+        <p class="err" id="err" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>Engraved months</h2>
+        <p class="hint">Each finished month gets a line on the jar at the total you had saved by its last day.</p>
+        <ul class="months" id="months"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Deposits</h2>
+        <ul class="log" id="log"></ul>
+        <details>
+          <summary>Backup, restore &amp; reset</summary>
+          <div class="stack">
+            <p class="hint" style="margin:0">Your jar is saved in this browser only. Copy the backup code somewhere safe, or paste one here to restore.</p>
+            <textarea id="backup" spellcheck="false" aria-label="Backup code"></textarea>
+            <div class="row">
+              <button class="btn" id="copy" type="button">Copy backup</button>
+              <button class="btn" id="restore" type="button">Restore from code</button>
+              <button class="btn danger" id="reset" type="button">Empty the jar</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var GOAL = 15000;
+  var DENOMS = [5, 10, 20, 50, 100];
+  var KEY = "moneyjar.v1";
+  var Y_BOTTOM = 439, Y_GOAL = 140;
+  var MILESTONES = [1000, 2500, 5000, 7500, 10000, 12500, 15000];
+  var NS = "http://www.w3.org/2000/svg";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var state = { deposits: [] };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var parsed = JSON.parse(raw); if (parsed && Array.isArray(parsed.deposits)) state = parsed; }
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) { return "$" + Math.round(n).toLocaleString("en-US"); };
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function monthOf(s) { return s.slice(0, 7); }
+  function nextMonth(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo > 12) { mo = 1; y++; } return y + "-" + pad(mo); }
+  function monthName(m, long) {
+    var d = new Date(+m.slice(0, 4), +m.slice(5, 7) - 1, 1);
+    return long ? d.toLocaleString("en-US", { month: "long", year: "numeric" })
+                : d.toLocaleString("en-US", { month: "short" }).toUpperCase() + " ’" + m.slice(2, 4);
+  }
+  function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
+  function yFor(total) { return Y_BOTTOM - Math.min(total, GOAL) / GOAL * (Y_BOTTOM - Y_GOAL); }
+  function total() { return state.deposits.reduce(function (s, d) { return s + d.amount; }, 0); }
+  function sorted() { return state.deposits.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.t - b.t; }); }
+
+  // One engraving per finished calendar month, from the first deposit's month up to last month.
+  function months() {
+    var list = sorted();
+    if (!list.length) return { done: [], current: null };
+    var cur = monthOf(todayStr());
+    var out = [], m = monthOf(list[0].date), run = 0, i = 0;
+    while (m <= cur) {
+      var added = 0;
+      while (i < list.length && monthOf(list[i].date) <= m) { added += list[i].amount; i++; }
+      run += added;
+      out.push({ month: m, added: added, total: run });
+      m = nextMonth(m);
+    }
+    var current = out[out.length - 1].month === cur ? out.pop() : null;
+    // deposits dated in the future still count toward the live total
+    if (current && i < list.length) { for (; i < list.length; i++) { current.added += list[i].amount; current.total += list[i].amount; } }
+    return { done: out, current: current };
+  }
+
+  // ---- static SVG bits
+  var ridges = $("ridges");
+  for (var r = 0; r < 17; r++) {
+    var l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", 80 + r * 10); l.setAttribute("x2", 80 + r * 10);
+    l.setAttribute("y1", 26); l.setAttribute("y2", 56); l.setAttribute("class", "lid-ridge");
+    ridges.appendChild(l);
+  }
+
+  function billShape(amount, x, y, rot) {
+    var g = document.createElementNS(NS, "g");
+    g.setAttribute("class", "bill-shape");
+    g.setAttribute("transform", "translate(" + x + "," + y + ") rotate(" + rot + ")");
+    var shade = amount >= 100 ? "var(--money-dark)" : amount >= 20 ? "var(--money)" : "var(--money)";
+    var b = document.createElementNS(NS, "rect");
+    b.setAttribute("class", "b"); b.setAttribute("x", -22); b.setAttribute("y", -10);
+    b.setAttribute("width", 44); b.setAttribute("height", 20); b.setAttribute("rx", 1.5); b.setAttribute("fill", shade);
+    var inner = document.createElementNS(NS, "rect");
+    inner.setAttribute("class", "i"); inner.setAttribute("x", -19); inner.setAttribute("y", -7);
+    inner.setAttribute("width", 38); inner.setAttribute("height", 14);
+    var t = document.createElementNS(NS, "text");
+    t.setAttribute("text-anchor", "middle"); t.setAttribute("y", 3); t.textContent = "$" + amount;
+    g.appendChild(b); g.appendChild(inner); g.appendChild(t);
+    return g;
+  }
+
+  // Where a deposit's bill comes to rest on the pile.
+  function restingSpot(d, cumAfter) {
+    var x = 62 + hash(d.id + "x") * 196;
+    var y = Math.min(yFor(cumAfter) + 4 + hash(d.id + "y") * 12, 428);
+    var rot = -28 + hash(d.id + "r") * 56;
+    return { x: x, y: y, rot: rot };
+  }
+
+  var lastEtched = null;
+  function renderJar(dropId) {
+    var t = total(), level = yFor(t);
+    var fill = $("fill");
+    var fillTop = Math.min(level + 10, Y_BOTTOM);
+    fill.setAttribute("y", fillTop); fill.setAttribute("height", Math.max(Y_BOTTOM - fillTop, 0));
+
+    // surface pile: bills near the current level
+    var pile = $("pile"); pile.textContent = "";
+    var list = sorted(), cum = 0, spots = [];
+    for (var i = 0; i < list.length; i++) { cum += list[i].amount; spots.push({ d: list[i], cum: cum }); }
+    var visible = spots.filter(function (s) { return yFor(s.cum) < level + 40; }).slice(-120);
+    visible.forEach(function (s) {
+      if (s.d.id === dropId) return;
+      var p = restingSpot(s.d, s.cum);
+      pile.appendChild(billShape(s.d.amount, p.x, p.y, p.rot));
+    });
+    if (dropId) {
+      var s = spots.filter(function (x) { return x.d.id === dropId; })[0];
+      if (s) dropBill(s.d, restingSpot(s.d, s.cum));
+    }
+
+    // engravings
+    var m = months(), et = $("etchings"); et.textContent = "";
+    var lastR = -99, lastL = -99;
+    m.done.forEach(function (e, idx) {
+      var y = yFor(e.total);
+      var g = document.createElementNS(NS, "g");
+      var tip = document.createElementNS(NS, "title");
+      tip.textContent = monthName(e.month, true) + ": " + money(e.total) + " saved (+" + money(e.added) + ")";
+      g.appendChild(tip);
+      var d = "M40," + y.toFixed(1) + " Q160," + (y + 7).toFixed(1) + " 280," + y.toFixed(1);
+      var sh = document.createElementNS(NS, "path"); sh.setAttribute("d", d); sh.setAttribute("class", "etch-shadow");
+      sh.setAttribute("transform", "translate(0,0.8)");
+      var ln = document.createElementNS(NS, "path"); ln.setAttribute("d", d); ln.setAttribute("class", "etch-line");
+      var isNew = lastEtched !== null && idx >= lastEtched;
+      if (isNew && !reduceMotion) { ln.setAttribute("stroke-dasharray", "260"); ln.setAttribute("class", "etch-line etch-new"); }
+      g.appendChild(sh); g.appendChild(ln);
+      var label = monthName(e.month) + "  " + money(e.total);
+      var tx = document.createElementNS(NS, "text"); tx.setAttribute("class", "etch-text"); tx.textContent = label;
+      if (Math.abs(lastR - y) >= 12) { tx.setAttribute("x", 276); tx.setAttribute("text-anchor", "end"); tx.setAttribute("y", y - 3); g.appendChild(tx); lastR = y; }
+      else if (Math.abs(lastL - y) >= 12) { tx.setAttribute("x", 44); tx.setAttribute("y", y - 3); g.appendChild(tx); lastL = y; }
+      et.appendChild(g);
+    });
+    lastEtched = m.done.length;
+
+    $("pctLabel").textContent = t >= GOAL ? "Goal reached!" : Math.floor(t / GOAL * 100) + "% full";
+  }
+
+  function dropBill(d, p) {
+    var drops = $("drops");
+    var g = billShape(d.amount, p.x, p.y, p.rot);
+    if (reduceMotion || !g.animate) { $("pile").appendChild(g); return; }
+    drops.appendChild(g);
+    var startX = 140 + (p.x - 160) * .25;
+    var anim = g.animate([
+      { transform: "translate(" + startX + "px, -30px) rotate(0deg)" },
+      { transform: "translate(" + p.x + "px," + p.y + "px) rotate(" + p.rot + "deg)" }
+    ], { duration: 650, easing: "cubic-bezier(.45,0,.9,.6)" });
+    anim.onfinish = function () { drops.removeChild(g); $("pile").appendChild(g); };
+  }
+
+  function renderPanel() {
+    var t = total(), m = months();
+    $("sSaved").textContent = money(t);
+    $("sLeft").textContent = money(Math.max(GOAL - t, 0));
+    var pct = Math.min(t / GOAL * 100, 100);
+    $("barFill").style.width = pct + "%";
+    $("barPct").textContent = pct.toFixed(1) + "%";
+
+    var all = m.done.concat(m.current ? [m.current] : []);
+    var avg = all.length ? t / all.length : 0;
+    $("sAvg").textContent = all.length ? money(avg) : "–";
+    if (t >= GOAL) $("eta").textContent = "Jar full. Goal reached!";
+    else if (avg > 0) {
+      var left = Math.ceil((GOAL - t) / avg), mm = monthOf(todayStr());
+      for (var i = 0; i < left; i++) mm = nextMonth(mm);
+      $("eta").textContent = "At this pace: full by " + monthName(mm, true);
+    } else $("eta").textContent = "Add a bill to start your pace";
+
+    var cur = monthOf(todayStr());
+    $("monthNote").textContent = m.current || state.deposits.length
+      ? monthName(cur, true) + ": " + money(m.current ? m.current.added : 0) + " added so far. This month gets engraved on " + monthName(nextMonth(cur), true).replace(" ", " 1, ") + "."
+      : "Your first engraving appears after the first month you save in.";
+
+    var ul = $("months"); ul.textContent = "";
+    if (!all.length) { var li0 = document.createElement("li"); li0.innerHTML = '<span class="empty">No months yet.</span>'; ul.appendChild(li0); }
+    all.slice().reverse().forEach(function (e) {
+      var li = document.createElement("li");
+      if (m.current && e.month === m.current.month) li.className = "live";
+      li.innerHTML = '<span class="m"></span><span class="d"></span><span class="t"></span>';
+      li.children[0].textContent = monthName(e.month, true);
+      li.children[1].textContent = "+" + money(e.added);
+      li.children[2].textContent = money(e.total);
+      ul.appendChild(li);
+    });
+
+    var log = $("log"); log.textContent = "";
+    var list = sorted().reverse();
+    if (!list.length) { var e0 = document.createElement("li"); e0.style.display = "block"; e0.innerHTML = '<p class="empty">The jar is empty. Tap a bill above to make your first deposit.</p>'; log.appendChild(e0); }
+    list.slice(0, 200).forEach(function (d) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="amt"></span><span class="when"></span><button class="x" type="button">Remove</button>';
+      li.children[0].textContent = money(d.amount);
+      li.children[1].textContent = new Date(d.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      li.children[2].setAttribute("aria-label", "Remove " + money(d.amount) + " deposit");
+      li.children[2].addEventListener("click", function () { removeDeposit(d.id); });
+      log.appendChild(li);
+    });
+    $("undo").disabled = !state.deposits.length;
+    $("backup").value = JSON.stringify(state);
+  }
+
+  function render(dropId) { renderJar(dropId); renderPanel(); }
+
+  var toastTimer;
+  function toast(msg) {
+    var el = $("toast"); el.textContent = msg; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2600);
+  }
+
+  function addDeposit(amount) {
+    $("err").textContent = "";
+    if (!(amount >= 5) || Math.floor(amount) !== amount) { $("err").textContent = "Enter a whole-dollar amount of $5 or more."; return; }
+    var date = $("date").value || todayStr();
+    var before = total();
+    var d = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), amount: amount, date: date, t: Date.now() };
+    state.deposits.push(d); save();
+    render(d.id);
+    var after = total();
+    var hit = MILESTONES.filter(function (m) { return before < m && after >= m; }).pop();
+    if (hit === GOAL) toast("You did it! $15,000 saved.");
+    else if (hit) toast("Milestone: " + money(hit) + " in the jar");
+    else toast(money(amount) + " added");
+  }
+
+  function removeDeposit(id) {
+    state.deposits = state.deposits.filter(function (d) { return d.id !== id; });
+    save(); render(); toast("Deposit removed");
+  }
+
+  // ---- controls
+  var billsEl = $("bills");
+  DENOMS.forEach(function (n) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "bill"; b.textContent = "$" + n;
+    b.setAttribute("aria-label", "Add $" + n);
+    b.addEventListener("click", function () { addDeposit(n); });
+    billsEl.appendChild(b);
+  });
+  $("date").value = todayStr();
+  $("addCustom").addEventListener("click", function () {
+    var v = Number($("custom").value);
+    addDeposit(v); if (v >= 5 && Math.floor(v) === v) $("custom").value = "";
+  });
+  $("custom").addEventListener("keydown", function (e) { if (e.key === "Enter") $("addCustom").click(); });
+  $("undo").addEventListener("click", function () {
+    var last = state.deposits.slice().sort(function (a, b) { return a.t - b.t; }).pop();
+    if (last) removeDeposit(last.id);
+  });
+  $("copy").addEventListener("click", function () {
+    var ta = $("backup");
+    var done = function () { toast("Backup code copied"); };
+    var fallback = function () { ta.focus(); ta.select(); toast("Select-all is on. Copy it with your keyboard."); };
+    try { navigator.clipboard.writeText(ta.value).then(done, fallback); } catch (e) { fallback(); }
+  });
+  $("restore").addEventListener("click", function () {
+    try {
+      var p = JSON.parse($("backup").value);
+      if (!p || !Array.isArray(p.deposits)) throw 0;
+      p.deposits = p.deposits.filter(function (d) { return d && d.id && d.amount >= 5 && /^\d{4}-\d{2}-\d{2}$/.test(d.date); });
+      state = { deposits: p.deposits }; save(); lastEtched = null; render(); toast("Jar restored");
+    } catch (e) { toast("That backup code is not valid. Paste the full code and try again."); }
+  });
+  var resetArmed = null;
+  $("reset").addEventListener("click", function () {
+    var btn = $("reset");
+    if (!resetArmed) {
+      btn.textContent = "Tap again to empty";
+      resetArmed = setTimeout(function () { btn.textContent = "Empty the jar"; resetArmed = null; }, 4000);
+      return;
+    }
+    clearTimeout(resetArmed); resetArmed = null; btn.textContent = "Empty the jar";
+    state = { deposits: [] }; save(); lastEtched = null; render(); toast("Jar emptied");
+  });
+
+  // Re-check at midnight-ish so a month rolling over while the page is open gets engraved.
+  setInterval(function () { var before = lastEtched; if (months().done.length !== before) render(); }, 60000);
+
+  render();
+})();
+</script>
